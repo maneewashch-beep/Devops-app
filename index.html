@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Server Cheat Sheet</title>
+    <!-- Tailwind CSS with Dark Mode Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Kanit & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Confetti Effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            transition: background-color 0.3s, color 0.3s;
+            background-image: radial-gradient(#94a3b8 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .dark body {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+        }
+        
+        /* Glass Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background-color: #1e293b; /* Slate 800 */
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.9rem; /* Larger font for readability */
+            line-height: 1.6;
+            overflow-x: auto; /* Keep horizontal scroll for long lines */
+            position: relative;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap; /* Preserve newlines */
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .dark .code-block {
+            background-color: #0f172a; /* Slate 900 */
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cmd-line {
+            display: block;
+            padding-left: 1.4em;
+            position: relative;
+        }
+        .cmd-line::before {
+            content: "$";
+            position: absolute;
+            left: 0;
+            color: #34d399; /* Emerald 400 */
+            font-weight: bold;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            color: #cbd5e1;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+            border: 1px solid transparent;
+            z-index: 10;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Quiz Modal */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Menu Dropdown Animation */
+        #menu-dropdown {
+            transform-origin: top right;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        }
+        #menu-dropdown.hidden {
+            display: none;
+        }
+        
+        /* Quiz Timer Bar */
+        .timer-bar {
+            transition: width 1s linear;
+        }
+        
+        /* Checkbox Mastery Style */
+        .mastery-checkbox:checked + div {
+            background-color: #10b981; /* Green 500 */
+            border-color: #10b981;
+        }
+        .mastery-checkbox:checked + div svg {
+            opacity: 1;
+        }
+        
+        /* Mastered Card Style */
+        .phase-card.mastered {
+            opacity: 0.6;
+            transform: scale(0.98);
+            border-color: #10b981;
+        }
+        .phase-card.mastered:hover {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Scroll to Top Button */
+        #scroll-top-btn {
+            transition: all 0.3s;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #scroll-top-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Document Viewer Style */
+        .doc-viewer {
+            background-color: #ffffff;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            font-family: 'Kanit', sans-serif;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+        .dark .doc-viewer {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-color: #334155;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        .doc-header { font-weight: bold; font-size: 1.1rem; margin-top: 1rem; margin-bottom: 0.5rem; color: #db2777; }
+        .dark .doc-header { color: #f472b6; }
+        .doc-sub { padding-left: 15px; border-left: 3px solid #f9a8d4; }
+        .dark .doc-sub { border-left-color: #831843; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white/90 dark:bg-slate-800/90 backdrop-blur shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40 transition-colors duration-300">
+        <div class="container mx-auto px-4 py-3 flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+            
+            <!-- Logo Section -->
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-blue-500 to-purple-500 text-white p-2.5 rounded-xl shadow-lg transform hover:scale-105 transition">
+                    <i data-lucide="server" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                        DevOps Pipeline
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Server Setup & Deployment Cheat Sheet</p>
+                </div>
+            </div>
+            
+            <!-- Controls (Theme + Menu) - Order 2 on mobile (right side), Order 3 on desktop -->
+            <div class="flex items-center gap-2 md:gap-3 order-2 md:order-3">
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition shadow-inner" title="Toggle Theme">
+                    <i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Menu Button -->
+                <div class="relative">
+                    <button onclick="toggleMenu()" id="menu-btn" class="flex items-center gap-2 px-3 py-2 bg-slate-800 text-white dark:bg-white dark:text-slate-900 rounded-lg font-semibold text-sm shadow-lg hover:opacity-90 transition relative">
+                        <span class="hidden md:inline">Menu</span>
+                        <i data-lucide="menu" class="w-5 h-5 md:hidden"></i>
+                        <i data-lucide="chevron-down" class="w-4 h-4 hidden md:block"></i>
+                        <!-- Progress Dot -->
+                        <span id="menu-progress-dot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 hidden"></span>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="menu-dropdown" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 p-3 z-50">
+                        
+                        <!-- Progress Section -->
+                        <div class="mb-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Learning Progress</span>
+                                <span id="overall-progress-text" class="text-xs font-bold text-blue-600 dark:text-blue-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div id="overall-progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <button onclick="openQuiz(); toggleMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-3 text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-90 transition mb-1">
+                            <i data-lucide="brain-circuit" class="w-4 h-4"></i> Test Your Knowledge
+                        </button>
+                         <button onclick="confirmDownloadPDF(); toggleMenu()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition mb-1">
+                            <i data-lucide="download" class="w-4 h-4 text-blue-500"></i> Download PDF Poster
+                        </button>
+                        
+                        <div class="border-t border-slate-100 dark:border-slate-700 my-2"></div>
+                        
+                        <button onclick="resetProgress(); toggleMenu()" class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition">
+                            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset Progress
+                        </button>
+
+                        <div class="text-[10px] text-center text-slate-400 mt-2 hidden md:block">
+                            Tips: Use <kbd class="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">←</kbd> <kbd class="font-mono bg-slate-100 dark:bg-slate-700 px-1 rounded">→</kbd> to navigate
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Bar - Order 3 on mobile (new line), Order 2 on desktop (middle) -->
+            <div class="relative w-full md:w-64 lg:w-80 group order-3 md:order-2">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition"></i>
+                </div>
+                <input type="text" id="search-input" placeholder="Search commands..." 
+                    class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all shadow-sm"
+                    onkeyup="handleSearch()">
+            </div>
+        </div>
+        
+        <!-- Navigation Bar (Scrollable) -->
+        <div class="border-t border-slate-100 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 backdrop-blur">
+            <div class="container mx-auto">
+                <div class="flex overflow-x-auto py-2 px-4 gap-3 no-scrollbar scroll-smooth" id="navbar-container">
+                    <!-- Nav items generated by JS -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto px-4 py-8 flex-grow flex flex-col items-center justify-start min-h-[60vh]">
+        
+        <!-- Cards Container -->
+        <div id="cards-container" class="w-full max-w-4xl relative">
+            <!-- Phase 1 -->
+            <div id="phase-1" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-blue-400 dark:border-blue-500 w-full animate-slide-up" data-title="Infrastructure SSH">
+                <div class="bg-blue-50/80 dark:bg-blue-900/20 p-4 sm:p-6 border-b border-blue-100 dark:border-blue-800 flex items-center justify-between">
+                    <h2 class="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟦</span> Infrastructure
+                    </h2>
+                    <!-- Mastery Checkbox -->
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-blue-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(1)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                            <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-500 shadow-sm"><i data-lucide="download" class="w-5 h-5"></i></div> 
+                            Install SSH Server
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-2">บน Ubuntu Server ใน Proxmox</p>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">sudo apt update</span>
+                            <span class="cmd-line">sudo apt install openssh-server</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                            <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-500 shadow-sm"><i data-lucide="link" class="w-5 h-5"></i></div> 
+                            Connect via SSH
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-2">ทำใน CMD เครื่องเรา (Client)</p>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">ssh user@ip_address</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2 -->
+            <div id="phase-2" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-emerald-400 dark:border-emerald-500 w-full hidden animate-slide-up" data-title="Docker Install Environment">
+                <div class="bg-emerald-50/80 dark:bg-emerald-900/20 p-4 sm:p-6 border-b border-emerald-100 dark:border-emerald-800 flex items-center justify-between">
+                    <h2 class="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟩</span> Docker Env
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-emerald-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(2)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 shadow-sm inline-block mr-2"><i data-lucide="trash-2" class="w-4 h-4"></i></div>
+                             1. Clean & Prepare
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="text-slate-500 italic"># Remove old versions</span>
+<span class="cmd-line">for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done</span>
+
+<span class="text-slate-500 italic"># Add Repo & Install Keys</span>
+<span class="cmd-line">sudo apt-get update</span>
+<span class="cmd-line">sudo apt-get install ca-certificates curl gnupg lsb-release</span>
+<span class="cmd-line">sudo install -m 0755 -d /etc/apt/keyrings</span>
+<span class="cmd-line">sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg</span>
+<span class="cmd-line">sudo chmod a+r /etc/apt/keyrings/docker.gpg</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                            <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 shadow-sm inline-block mr-2"><i data-lucide="play-circle" class="w-4 h-4"></i></div>
+                            2. Install Engine & Enable
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y</span>
+                            <span class="cmd-line">sudo systemctl enable docker</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3 -->
+            <div id="phase-3" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-yellow-400 dark:border-yellow-500 w-full hidden animate-slide-up" data-title="Portainer Management GUI">
+                <div class="bg-yellow-50/80 dark:bg-yellow-900/20 p-4 sm:p-6 border-b border-yellow-100 dark:border-yellow-800 flex items-center justify-between">
+                    <h2 class="font-bold text-yellow-700 dark:text-yellow-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟨</span> Portainer
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-yellow-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(3)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                            <div class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 shadow-sm inline-block mr-2"><i data-lucide="box" class="w-4 h-4"></i></div>
+                            Deploy Portainer
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">docker volume create portainer_data</span>
+                            <span class="cmd-line">docker run -d -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest</span>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-xl border border-yellow-100 dark:border-yellow-800">
+                        <h3 class="text-lg font-bold text-yellow-700 dark:text-yellow-400 mb-3 flex items-center gap-2">
+                             <div class="p-1 rounded bg-yellow-200 dark:bg-yellow-800"><i data-lucide="alert-circle" class="w-4 h-4"></i></div>
+                             Fix Live Connect
+                        </h3>
+                        <div class="code-block group text-sm">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="text-slate-500"># Edit /etc/docker/daemon.json</span>
+{
+  "min-api-version": "1.41"
+}
+                        </div>
+                        <p class="text-sm mt-2 text-yellow-600 dark:text-yellow-500">* อย่าลืม restart docker service หลังจากแก้ไขไฟล์</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 4 -->
+            <div id="phase-4" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-purple-400 dark:border-purple-500 w-full hidden animate-slide-up" data-title="GitLab Server Version Control">
+                <div class="bg-purple-50/80 dark:bg-purple-900/20 p-4 sm:p-6 border-b border-purple-100 dark:border-purple-800 flex items-center justify-between">
+                    <h2 class="font-bold text-purple-700 dark:text-purple-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟪</span> GitLab
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-purple-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(4)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 shadow-sm inline-block mr-2"><i data-lucide="settings" class="w-4 h-4"></i></div>
+                             1. Setup Network & Volumes
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<span class="cmd-line">sudo docker network create app_net</span>
+<span class="cmd-line">sudo docker volume create gitlab_config</span>
+<span class="cmd-line">sudo docker volume create gitlab_logs</span>
+<span class="cmd-line">sudo docker volume create gitlab_data</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 text-sm font-mono">
+                        <span class="bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-lg">Web Port: 8888</span>
+                        <span class="bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-lg">SSH Port: 2222</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 shadow-sm inline-block mr-2"><i data-lucide="file-code" class="w-4 h-4"></i></div>
+                             Docker Compose Config
+                        </h3>
+                        <div class="code-block group text-sm">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+version: '3.8'
+
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab
+    restart: always
+    hostname: '192.168.91.135'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://192.168.91.135:8888'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    ports:
+      - '8888:8888'
+      - '2222:22'
+    volumes:
+      - 'gitlab_config:/etc/gitlab'
+      - 'gitlab_logs:/var/log/gitlab'
+      - 'gitlab_data:/var/opt/gitlab'
+    networks:
+      - app_net
+
+volumes:
+  gitlab_config:
+    external: true
+  gitlab_logs:
+    external: true
+  gitlab_data:
+    external: true
+
+networks:
+  app_net:
+    external: true
+                        </div>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800">
+                        <h3 class="text-lg font-semibold mb-3 text-red-500 flex items-center gap-2">
+                            <div class="p-1 rounded bg-red-100 dark:bg-red-800"><i data-lucide="key-round" class="w-4 h-4"></i></div>
+                            Reset Root Password
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">docker exec -it gitlab /bin/bash</span>
+                            <span class="cmd-line">gitlab-rails console</span>
+                            <span class="text-purple-300 block mt-2">user = User.where(id: 1).first</span>
+                            <span class="text-purple-300 block">user.password = 'pntc@2025'</span>
+                            <span class="text-purple-300 block font-bold border-b border-purple-500/50">user.password_confirmation = 'pntc@2025'</span>
+                            <span class="text-purple-300 block">user.save!</span>
+                            <span class="text-slate-500 block mt-2"># พิมพ์ exit 2 ครั้งเพื่อออก</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 5 -->
+            <div id="phase-5" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-orange-400 dark:border-orange-500 w-full hidden animate-slide-up" data-title="GitLab Runner Register">
+                <div class="bg-orange-50/80 dark:bg-orange-900/20 p-4 sm:p-6 border-b border-orange-100 dark:border-orange-800 flex items-center justify-between">
+                    <h2 class="font-bold text-orange-700 dark:text-orange-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟧</span> Runner
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-orange-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(5)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-orange-100 dark:bg-orange-900 text-orange-600 shadow-sm inline-block mr-2"><i data-lucide="database" class="w-4 h-4"></i></div>
+                             1. Create Config Volume
+                        </h3>
+                        <div class="code-block group">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">docker volume create gitlab_runner_config</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Docker Compose for Runner -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-orange-100 dark:bg-orange-900 text-orange-600 shadow-sm inline-block mr-2"><i data-lucide="server" class="w-4 h-4"></i></div>
+                             2. Deploy Runner Stack
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-2">สร้างไฟล์ <code>docker-compose.yml</code> แล้วรัน <code>docker compose up -d</code></p>
+                        <div class="code-block group text-sm">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+version: '3.8'
+
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    restart: always
+    volumes:
+      - gitlab_runner_config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    external: true
+
+volumes:
+  gitlab_runner_config:
+    external: true
+                        </div>
+                    </div>
+
+                    <!-- 3. Register Runner (Detailed) -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-orange-100 dark:bg-orange-900 text-orange-600 shadow-sm inline-block mr-2"><i data-lucide="terminal-square" class="w-4 h-4"></i></div>
+                             3. Register Runner
+                        </h3>
+                        <div class="code-block group mb-4">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <span class="cmd-line">sudo docker exec -it gitlab-runner gitlab-runner register</span>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-sm">
+                            <div class="bg-slate-100 dark:bg-slate-700 px-4 py-2 font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-600 flex items-center gap-2">
+                                <i data-lucide="terminal" class="w-4 h-4"></i> Interactive Steps (พิมพ์ตามนี้)
+                            </div>
+                            <div class="p-4 space-y-3 font-mono text-xs md:text-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start border-b border-slate-100 dark:border-slate-700 pb-2">
+                                    <span class="text-slate-500">Instance URL:</span>
+                                    <div>
+                                        <span class="text-orange-600 dark:text-orange-400 font-bold block">http://192.168.91.135:8888/</span>
+                                        <span class="text-xs text-red-400 italic">* ห้ามลืมเลข Port!</span>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start border-b border-slate-100 dark:border-slate-700 pb-2">
+                                    <span class="text-slate-500">Registration token:</span>
+                                    <span class="text-slate-700 dark:text-slate-300 italic">(วาง Token ที่ได้จาก GitLab: Settings > CI/CD > Runners)</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start border-b border-slate-100 dark:border-slate-700 pb-2">
+                                    <span class="text-slate-500">Description:</span>
+                                    <span class="text-orange-600 dark:text-orange-400">docker-runner</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start border-b border-slate-100 dark:border-slate-700 pb-2">
+                                    <span class="text-slate-500">Tags / Note:</span>
+                                    <span class="text-slate-400 italic">(กด Enter ข้ามได้เลย)</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start border-b border-slate-100 dark:border-slate-700 pb-2">
+                                    <span class="text-slate-500">Executor:</span>
+                                    <span class="text-orange-600 dark:text-orange-400 font-bold">docker</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-[1.5fr,2fr] gap-2 items-start">
+                                    <span class="text-slate-500">Default Image:</span>
+                                    <div>
+                                        <span class="text-orange-600 dark:text-orange-400 font-bold block">docker:latest</span>
+                                        <span class="text-xs text-slate-400 italic">* สำคัญมากสำหรับ .gitlab-ci.yml</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800">
+                        <h3 class="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                             <div class="p-1 rounded bg-red-100 dark:bg-red-800"><i data-lucide="skull" class="w-4 h-4"></i></div>
+                             จุดตาย! (Critical Fixes)
+                        </h3>
+                        <div class="space-y-6">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">runner/config.toml</code></p>
+                                <div class="code-block group text-sm">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+privileged = true
+pull_policy = "if-not-present"
+volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ Host <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">/etc/docker/daemon.json</code></p>
+                                <div class="code-block group text-sm">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+{ "insecure-registries" : ["172.16.39.193:5000"] }
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Phase 6 -->
+            <div id="phase-6" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-rose-400 dark:border-rose-500 w-full hidden animate-slide-up" data-title="CI/CD Pipeline .gitlab-ci.yml">
+                <div class="bg-rose-50/80 dark:bg-rose-900/20 p-4 sm:p-6 border-b border-rose-100 dark:border-rose-800 flex items-center justify-between">
+                    <h2 class="font-bold text-rose-700 dark:text-rose-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟥</span> CI/CD
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-rose-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(6)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div class="grid md:grid-cols-1 gap-6">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                                <div class="p-2 rounded-lg bg-rose-100 dark:bg-rose-900 text-rose-600 shadow-sm inline-block mr-2"><i data-lucide="file-code" class="w-4 h-4"></i></div>
+                                Complete .gitlab-ci.yml (Frontend & Backend)
+                            </h3>
+                            <div class="code-block group text-sm">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+stages:
+  - build
+  - deploy
+
+variables:
+  REGISTRY_URL: "172.16.39.193:5000"
+  DOCKER_TLS_CERTDIR: ""
+
+image: docker:24.0.5
+services:
+  - name: docker:24.0.5-dind
+
+build_backend:
+  stage: build
+  script:
+    - echo "Building Backend..."
+    - cd backend 
+    - docker build --network host -t $REGISTRY_URL/social-backend:latest .
+    - echo "Pushing Backend..."
+    - docker push $REGISTRY_URL/social-backend:latest
+  only:
+    - main
+
+build_frontend:
+  stage: build
+  script:
+    - echo "Building Frontend..."
+    - cd frontend 
+    - docker build --network host -t $REGISTRY_URL/social-frontend:latest .
+    - echo "Pushing Frontend..."
+    - docker push $REGISTRY_URL/social-frontend:latest
+  only:
+    - main
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 7 -->
+            <div id="phase-7" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-indigo-400 dark:border-indigo-500 w-full hidden animate-slide-up" data-title="Dockerfile Node.js Vue React">
+                <div class="bg-indigo-50/80 dark:bg-indigo-900/20 p-4 sm:p-6 border-b border-indigo-100 dark:border-indigo-800 flex items-center justify-between">
+                    <h2 class="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🟦</span> Dockerfiles
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-indigo-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(7)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <span class="text-sm font-bold text-indigo-500 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded">Frontend (Vue/React)</span>
+                        <div class="code-block group text-sm leading-relaxed mt-3">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+FROM node:16-alpine as build-stage
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM nginx:stable-alpine as production-stage
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-sm font-bold text-indigo-500 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded">Backend (Node)</span>
+                        <div class="code-block group text-sm leading-relaxed mt-3">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN addgroup -S app && adduser -S -G app app \
+    && chown -R app:app /app
+USER app
+EXPOSE 3001
+CMD ["node", "app.js"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 8 -->
+            <div id="phase-8" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-slate-600 dark:border-slate-400 bg-slate-800 text-white w-full hidden animate-slide-up" data-title="Git Push Command">
+                <div class="bg-slate-900/50 p-4 sm:p-6 border-b border-slate-700 flex items-center justify-between">
+                    <h2 class="font-bold text-slate-100 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🚀</span> Git Push
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-white transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(8)">
+                            <div class="w-6 h-6 border-2 border-slate-500 rounded flex items-center justify-center transition-colors bg-slate-700">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8">
+                    <ul class="space-y-6 font-mono text-base text-slate-300">
+                        <li class="flex items-center gap-4 bg-slate-700/30 p-3 rounded-lg">
+                            <span class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold border border-green-500/50">1</span>
+                            <code>git init</code>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-700/30 p-3 rounded-lg">
+                            <span class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold border border-green-500/50">2</span>
+                            <code class="break-all">git remote add origin http://...</code>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-700/30 p-3 rounded-lg">
+                            <span class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold border border-green-500/50">3</span>
+                            <code>git add .</code>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-700/30 p-3 rounded-lg">
+                            <span class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold border border-green-500/50">4</span>
+                            <code>git commit -m "Init"</code>
+                        </li>
+                        <li class="flex items-center gap-4 bg-slate-700/30 p-3 rounded-lg">
+                            <span class="w-8 h-8 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center font-bold border border-green-500/50">5</span>
+                            <code>git push -u origin master</code>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Phase 9: App Deployment -->
+            <div id="phase-9" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-cyan-400 dark:border-cyan-500 w-full hidden animate-slide-up" data-title="App Deployment Production">
+                <div class="bg-cyan-50/80 dark:bg-cyan-900/20 p-4 sm:p-6 border-b border-cyan-100 dark:border-cyan-800 flex items-center justify-between">
+                    <h2 class="font-bold text-cyan-700 dark:text-cyan-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">🚀</span> App Deployment
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-cyan-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(9)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
+                             <div class="p-2 rounded-lg bg-cyan-100 dark:bg-cyan-900 text-cyan-600 shadow-sm inline-block mr-2"><i data-lucide="layers" class="w-4 h-4"></i></div>
+                             Production Stack (docker-compose.yml)
+                        </h3>
+                        <div class="code-block group text-sm">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: social_mariadb
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: asdf
+      MYSQL_DATABASE: social_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: asdf
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: social_phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: root
+      PMA_PASSWORD: asdf
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  backend_app:
+    # เปลี่ยนจาก build เป็น image จาก Registry
+    image: 172.16.39.193:5000/social-backend:latest
+    container_name: social_backend_api
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DB_HOST=mariadb
+      - DB_USER=root
+      - DB_PASS=asdf
+      - DB_NAME=social_db
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    # เปลี่ยนจาก build เป็น image จาก Registry
+    image: 172.16.39.193:5000/social-frontend:latest
+    container_name: social_frontend
+    restart: always
+    ports:
+      - "8085:80"
+    depends_on:
+      - backend_app
+    networks:
+      - app-network
+
+volumes:
+  mariadb_data:
+
+networks:
+  app-network:
+    driver: bridge
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 10: Rules & Resources -->
+            <div id="phase-10" class="phase-card glass-card rounded-2xl shadow-xl overflow-hidden border-t-4 border-pink-400 dark:border-pink-500 w-full hidden animate-slide-up" data-title="Rules Resources">
+                <div class="bg-pink-50/80 dark:bg-pink-900/20 p-4 sm:p-6 border-b border-pink-100 dark:border-pink-800 flex items-center justify-between">
+                    <h2 class="font-bold text-pink-700 dark:text-pink-300 flex items-center gap-3 text-lg sm:text-2xl">
+                        <span class="text-2xl sm:text-3xl">📚</span> Rules & Resources
+                    </h2>
+                    <label class="flex items-center gap-2 cursor-pointer group select-none">
+                        <span class="text-xs font-semibold text-slate-400 group-hover:text-pink-500 transition">จำได้แล้ว</span>
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only mastery-checkbox" onchange="toggleMastery(10)">
+                            <div class="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 rounded flex items-center justify-center transition-colors bg-white dark:bg-slate-800">
+                                <svg class="w-4 h-4 text-white opacity-0 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                <div class="p-6 sm:p-8 space-y-8">
+                    <!-- Link Button -->
+                    <div class="text-center">
+                        <a href="https://vecskill.bncc.ac.th/" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition transform">
+                            <i data-lucide="globe" class="w-5 h-5"></i> Visit Official Website (VEC Skill)
+                        </a>
+                    </div>
+
+                    <!-- Document Viewer -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200 border-b pb-2">Competition Criteria Document</h3>
+                        <div class="doc-viewer text-sm">
+                            <div class="doc-header">1. วัตถุประสงค์ของการแข่งขัน</div>
+                            <div class="doc-sub">
+                                <p>1.1 ส่งเสริมทักษะการออกแบบ พัฒนา IoT Application ด้วย Node.js</p>
+                                <p>1.2 เข้าใจและประยุกต์ใช้ DevOps ในการจัดการระบบ IoT</p>
+                                <p>1.3 สร้างสรรค์นวัตกรรม IoT Application แก้ปัญหาชีวิตประจำวัน/อุตสาหกรรม</p>
+                                <p>1.4 ส่งเสริมการคิดวิเคราะห์ ออกแบบระบบ และนำเทคโนโลยีมาใช้</p>
+                                <p>1.5 ยกระดับทักษะฝีมือสู่มาตรฐานวิชาชีพ</p>
+                            </div>
+
+                            <div class="doc-header">2. คุณสมบัติและข้อกำหนด</div>
+                            <div class="doc-sub">
+                                <p><strong>คุณสมบัติ:</strong> สมาชิก อวท., นักศึกษาระดับ ปวส. สาขา IT/Programmer/Network</p>
+                                <p><strong>ทีมแข่งขัน:</strong> 3 คน + ครู 1 คน</p>
+                                <p><strong>การแต่งกาย:</strong> ชุดนักศึกษา</p>
+                            </div>
+
+                            <div class="doc-header">3. รายละเอียดการแข่งขัน</div>
+                            <div class="doc-sub">
+                                <p><strong>งานที่กำหนด:</strong> Project Management (Jira), Router Config, GitLab, Docker/Podman, Node.js 18+, DBs, MQTT, Monitoring (Grafana), Testing Tools</p>
+                                <p><strong>การพัฒนา:</strong> Backend (Node), Frontend (Vue 3 + Nuxt + Tailwind), DevOps (CI/CD), Registry</p>
+                                <p><strong>IoT:</strong> ESP32 เชื่อมต่อ Sensor (BMP280/BME280 etc.)</p>
+                                <p><strong>เวลาแข่งขัน:</strong> 4 วัน (วันที่ 2 แข่งขัน 7 ชั่วโมง)</p>
+                            </div>
+
+                            <div class="doc-header">4. เกณฑ์การให้คะแนน (100 คะแนน)</div>
+                            <div class="doc-sub">
+                                <p><strong>1. Network (10):</strong> VLAN, Routing, DHCP, NAT</p>
+                                <p><strong>2. Network Topology (20):</strong> Virtualization, Linux Server, SSH, DevOps Tools (Docker, GitLab, Jenkins), Dockerfile/Compose, CI/CD Pipeline</p>
+                                <p><strong>3. IoT & MQTT (10):</strong> MQTT Server, Node-RED, Hardware Integration, Dashboard</p>
+                                <p><strong>4. Software & App (50):</strong> Flow Diagram, Database Design, UI Design, API Design, Backend Dev, Frontend Dev</p>
+                                <p><strong>5. Presentation (10):</strong> นำเสนอผลงานและตอบคำถาม</p>
+                            </div>
+                            
+                            <div class="doc-header">5. สิ่งที่ต้องเตรียม</div>
+                            <div class="doc-sub">
+                                <p><strong>ผู้เข้าแข่งขัน:</strong> Router/Switch L3, Server (RAM 16GB+), Laptop, IoT Kit (ESP32)</p>
+                                <p><strong>ผู้จัด:</strong> Network, Firewall, PC (Win 11), Software (VSCode, Docker, Node.js 18+, DB Tools)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-slate-400 text-xs mt-auto">
+        <p>Created for DevOps Training • 2025</p>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button onclick="scrollToTop()" id="scroll-top-btn" class="fixed bottom-6 right-6 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition z-50">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 z-[100] hidden items-center justify-center modal-overlay p-4 opacity-0 transition-opacity duration-300 w-full h-full">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 mx-auto flex flex-col max-h-[90vh]" id="quiz-content">
+            <div class="bg-gradient-to-r from-pink-500 to-rose-500 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i data-lucide="brain-circuit" class="w-5 h-5"></i> Memory Test</h3>
+                <button onclick="closeQuiz()" class="hover:bg-white/20 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div id="quiz-body" class="p-6 overflow-y-auto">
+                <!-- Mode Selection Screen -->
+                <div id="quiz-mode-select" class="text-center space-y-6">
+                    <div class="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mx-auto text-rose-500 animate-bounce">
+                        <i data-lucide="swords" class="w-10 h-10"></i>
+                    </div>
+                    <h4 class="text-xl font-bold dark:text-white">เลือกโหมดการทดสอบ</h4>
+                    <p class="text-sm text-slate-500">เลือกรูปแบบการทดสอบที่ต้องการ</p>
+                    <!-- High Score Display -->
+                    <div class="flex justify-center gap-4 text-xs font-bold text-slate-400">
+                        <span id="best-choice-score">Best Choice: -</span>
+                        <span id="best-typing-score">Best Typing: -</span>
+                    </div>
+                    <div class="grid gap-3">
+                        <button onclick="startQuiz('choice')" class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-pink-500 dark:hover:border-pink-500 hover:bg-pink-50 dark:hover:bg-slate-700 transition group flex items-center gap-4 text-left">
+                            <div class="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-lg text-blue-600 dark:text-blue-400">
+                                <i data-lucide="list-checks" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-slate-700 dark:text-slate-200 group-hover:text-pink-600">แบบถาม-ตอบ (Choice)</h5>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">สุ่มคำถาม 15 ข้อ เลือกคำตอบที่ถูกต้อง (15 วินาที/ข้อ)</p>
+                            </div>
+                        </button>
+                        
+                        <button onclick="startQuiz('typing')" class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-slate-700 transition group flex items-center gap-4 text-left">
+                            <div class="bg-purple-100 dark:bg-purple-900/50 p-3 rounded-lg text-purple-600 dark:text-purple-400">
+                                <i data-lucide="keyboard" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600">แบบพิมพ์คำสั่ง (Sequence)</h5>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">เรียงลำดับ Phase 1-9 ต้องพิมพ์ให้ถูกเป๊ะ! (1 นาที/ข้อ)</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timer Bar Display (Shared) -->
+                <div id="timer-container" class="hidden mb-4 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                    <div id="timer-bar" class="h-full bg-rose-500 w-full timer-bar"></div>
+                </div>
+
+                <!-- Choice Question Screen -->
+                <div id="quiz-question-container" class="hidden space-y-4">
+                    <div class="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                        <span id="q-progress">Question 1/15</span>
+                        <div class="flex gap-3">
+                             <span id="q-timer" class="text-rose-500 font-bold flex items-center gap-1"><i data-lucide="timer" class="w-3 h-3"></i> 15s</span>
+                             <span id="q-score" class="text-emerald-500">Score: 0</span>
+                        </div>
+                    </div>
+                    <h4 id="q-text" class="text-lg font-bold text-slate-800 dark:text-slate-100 leading-snug">Question text goes here?</h4>
+                    <div id="q-options" class="space-y-2 pt-2">
+                        <!-- Options injected here -->
+                    </div>
+                </div>
+
+                <!-- Typing Question Screen -->
+                <div id="quiz-typing-container" class="hidden space-y-5">
+                    <div class="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                        <span id="t-progress">Phase 1/9</span>
+                         <div class="flex gap-3">
+                             <span id="t-timer" class="text-rose-500 font-bold flex items-center gap-1"><i data-lucide="timer" class="w-3 h-3"></i> 60s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span class="text-xs font-bold text-slate-400 uppercase mb-1 block" id="t-phase-label">PHASE 1: INFRASTRUCTURE</span>
+                        <h4 id="t-text" class="text-md font-bold text-slate-800 dark:text-slate-100 mb-2">คำสั่งติดตั้ง SSH Server คือ?</h4>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-emerald-500 font-bold">$</span>
+                            </div>
+                            <input type="text" id="t-input" class="w-full pl-8 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:border-purple-500 dark:text-white font-mono text-sm" placeholder="type command here..." autocomplete="off">
+                        </div>
+                        <button onclick="checkTypingAnswer()" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition">Submit</button>
+                        <p id="t-feedback" class="text-center text-sm font-bold min-h-[20px]"></p>
+                    </div>
+                </div>
+
+                <!-- Result Screen -->
+                <div id="quiz-result" class="hidden text-center space-y-4">
+                    <div id="result-icon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto"></div>
+                    <h4 id="result-title" class="text-2xl font-bold dark:text-white"></h4>
+                    
+                    <!-- High Score Badge -->
+                    <div id="new-high-score" class="hidden animate-bounce text-sm font-bold text-orange-500">
+                        🎉 NEW HIGH SCORE! 🎉
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto my-4">
+                        <div class="bg-slate-50 dark:bg-slate-700 p-3 rounded-xl border border-slate-100 dark:border-slate-600">
+                             <span class="block text-xs text-slate-500 uppercase">Score</span>
+                             <span id="res-score" class="text-xl font-bold text-blue-500">0/5</span>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-700 p-3 rounded-xl border border-slate-100 dark:border-slate-600">
+                             <span class="block text-xs text-slate-500 uppercase">Accuracy</span>
+                             <span id="res-percent" class="text-xl font-bold text-purple-500">0%</span>
+                        </div>
+                    </div>
+        
+
+                    <p id="result-msg" class="text-slate-500 dark:text-slate-400"></p>
+                    <button onclick="resetQuiz()" class="px-6 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-white rounded-lg font-semibold transition">กลับไปหน้าหลัก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Download Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[110] hidden items-center justify-center modal-overlay p-4 opacity-0 transition-opacity duration-300 w-full h-full bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-sm rounded-xl shadow-2xl p-6 text-center transform scale-95 transition-transform duration-300" id="confirm-content">
+            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
+                <i data-lucide="file-down" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2">ยืนยันการดาวน์โหลด</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">คุณต้องการดาวน์โหลดไฟล์สรุป DevOps Cheat Sheet (PDF) หรือไม่?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition">ยกเลิก</button>
+                <button onclick="proceedDownload()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">ดาวน์โหลด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-[120] hidden flex-col items-center justify-center bg-slate-900/90 text-white backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-slate-700 border-t-blue-500 mb-4"></div>
+        <p class="font-bold text-lg">กำลังเตรียมไฟล์...</p>
+        <p class="text-sm text-slate-400">กรุณารอสักครู่</p>
+    </div>
+
+    <!-- Hidden Link for Download -->
+    <a id="real-download-link" href="unnamed.jpg" download="DevOps_Cheat_Sheet.jpg" class="hidden"></a>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-800 px-4 py-3 rounded-lg shadow-xl translate-y-24 transition-transform duration-300 flex items-center gap-3 z-50">
+        <i data-lucide="check-circle" class="w-5 h-5 text-green-400 dark:text-green-600"></i>
+        <span class="font-medium text-sm">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // --- Icons & Theme ---
+        lucide.createIcons();
+
+        // Dark Mode Logic
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+        
+        function toggleTheme() {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            if (isDark) {
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        // --- Menu Logic ---
+        function toggleMenu() {
+            const menu = document.getElementById('menu-dropdown');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                // Simple animation
+                menu.style.opacity = '0';
+                menu.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    menu.style.opacity = '1';
+                    menu.style.transform = 'scale(1)';
+                }, 10);
+            } else {
+                menu.style.opacity = '0';
+                menu.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // --- PDF Download Logic ---
+        function confirmDownloadPDF() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function proceedDownload() {
+            closeConfirmModal();
+            const loading = document.getElementById('loading-overlay');
+            loading.classList.remove('hidden');
+            setTimeout(() => { loading.classList.remove('opacity-0'); }, 10);
+
+            // Fake processing time
+            setTimeout(() => {
+                document.getElementById('real-download-link').click();
+                
+                // Hide loading
+                loading.classList.add('opacity-0');
+                setTimeout(() => {
+                    loading.classList.add('hidden');
+                }, 300);
+            }, 1500);
+        }
+
+        // --- Copy Function ---
+        function copyCode(button) {
+            const block = button.parentElement;
+            let text = block.innerText.replace('Copy', '').trim();
+            const lines = text.split('\n');
+            const cleanLines = lines.map(line => {
+                if (line.trim().startsWith('$')) return line.trim().substring(1).trim();
+                return line;
+            });
+            text = cleanLines.join('\n');
+
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-24');
+                setTimeout(() => toast.classList.add('translate-y-24'), 2000);
+            });
+        }
+
+        // --- Mastery Checkbox System ---
+        function initMastery() {
+            const phases = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            const stored = JSON.parse(localStorage.getItem('devops_mastery') || '{}');
+            let masteredCount = 0;
+            
+            phases.forEach(id => {
+                const checked = stored[id] || false;
+                if(checked) masteredCount++;
+                
+                const card = document.getElementById(`phase-${id}`);
+                if (card) {
+                    const checkbox = card.querySelector('.mastery-checkbox');
+                    if(checkbox) checkbox.checked = checked;
+                    
+                    if(checked) card.classList.add('mastered');
+                    else card.classList.remove('mastered');
+                }
+            });
+            updateGlobalProgress(masteredCount, phases.length);
+        }
+
+        function toggleMastery(id) {
+            const card = document.getElementById(`phase-${id}`);
+            const checkbox = card.querySelector('.mastery-checkbox');
+            const isChecked = checkbox.checked;
+            
+            // Visual Update
+            if(isChecked) card.classList.add('mastered');
+            else card.classList.remove('mastered');
+
+            // Save to Storage
+            const stored = JSON.parse(localStorage.getItem('devops_mastery') || '{}');
+            stored[id] = isChecked;
+            localStorage.setItem('devops_mastery', JSON.stringify(stored));
+            
+            // Recalculate Global Progress
+            const phases = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            let count = 0;
+            phases.forEach(pid => {
+                if(stored[pid]) count++;
+            });
+            updateGlobalProgress(count, phases.length);
+        }
+
+        function updateGlobalProgress(completed, total) {
+            const percentage = Math.round((completed / total) * 100);
+            const progressBar = document.getElementById('overall-progress-bar');
+            const progressText = document.getElementById('overall-progress-text');
+            const dot = document.getElementById('menu-progress-dot');
+            
+            if(progressBar) progressBar.style.width = `${percentage}%`;
+            if(progressText) progressText.innerText = `${percentage}%`;
+            
+            // Show dot if progress > 0
+            if(dot) {
+                if (percentage > 0 && percentage < 100) dot.classList.remove('hidden');
+                else dot.classList.add('hidden');
+            }
+
+            // Confetti at 100%
+            if(percentage === 100) {
+                triggerConfetti();
+            }
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            var randomInRange = function(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function resetProgress() {
+            localStorage.removeItem('devops_mastery');
+            initMastery();
+            // Optional: Close menu
+            // toggleMenu();
+        }
+
+        // --- Search System ---
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.phase-card');
+            const navContainer = document.getElementById('navbar-container');
+            
+            // If searching, show all matching cards (Grid Mode)
+            // If empty, return to Tab Mode
+            
+            if (query.length > 0) {
+                // Search Mode
+                navContainer.parentElement.parentElement.classList.add('opacity-50', 'pointer-events-none'); // Dim navbar
+                
+                cards.forEach(card => {
+                    const content = card.innerText.toLowerCase();
+                    if (content.includes(query)) {
+                        card.classList.remove('hidden');
+                        // Reset animation to ensure visibility
+                        card.classList.remove('animate-slide-up');
+                        void card.offsetWidth;
+                        card.classList.add('animate-slide-up');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            } else {
+                // Restore Tab Mode
+                navContainer.parentElement.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+                
+                // Find currently active tab
+                const activeBtn = document.querySelector('.nav-btn.active');
+                if(activeBtn) activeBtn.click(); // Re-trigger tab switch
+                else switchTab(1); // Default
+            }
+        }
+
+        // --- Scroll to Top ---
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scroll-top-btn');
+            if (window.scrollY > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Tab Navigation System ---
+        const phases = [
+            { id: 1, name: "Infra", icon: "server", color: "blue" },
+            { id: 2, name: "Docker", icon: "container", color: "emerald" },
+            { id: 3, name: "Portainer", icon: "layout-dashboard", color: "yellow" },
+            { id: 4, name: "GitLab", icon: "git-merge", color: "purple" },
+            { id: 5, name: "Runner", icon: "play-circle", color: "orange" },
+            { id: 6, name: "Pipeline", icon: "workflow", color: "rose" },
+            { id: 7, name: "Dockerfile", icon: "file-code", color: "indigo" },
+            { id: 8, name: "Git Push", icon: "upload-cloud", color: "slate" },
+            { id: 9, name: "App Deploy", icon: "layers", color: "cyan" },
+            { id: 10, name: "Rules & Links", icon: "book-open", color: "pink" }
+        ];
+
+        let currentPhaseIndex = 0; // For Keyboard Nav
+
+        function initNavbar() {
+            const container = document.getElementById('navbar-container');
+            const colorMap = {
+                blue: "bg-blue-100 text-blue-600",
+                emerald: "bg-emerald-100 text-emerald-600",
+                yellow: "bg-yellow-100 text-yellow-600",
+                purple: "bg-purple-100 text-purple-600",
+                orange: "bg-orange-100 text-orange-600",
+                rose: "bg-rose-100 text-rose-600",
+                indigo: "bg-indigo-100 text-indigo-600",
+                slate: "bg-slate-100 text-slate-600",
+                cyan: "bg-cyan-100 text-cyan-600",
+                pink: "bg-pink-100 text-pink-600",
+            };
+
+            const hoverMap = {
+                blue: "hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700",
+                emerald: "hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700",
+                yellow: "hover:bg-yellow-50 dark:hover:bg-yellow-900/30 hover:text-yellow-700",
+                purple: "hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700",
+                orange: "hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-700",
+                rose: "hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700",
+                indigo: "hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700",
+                slate: "hover:bg-slate-50 dark:hover:bg-slate-900/30 hover:text-slate-700",
+                cyan: "hover:bg-cyan-50 dark:hover:bg-cyan-900/30 hover:text-cyan-700",
+                pink: "hover:bg-pink-50 dark:hover:bg-pink-900/30 hover:text-pink-700",
+            };
+
+            phases.forEach((phase, index) => {
+                const btn = document.createElement('button');
+                
+                // Base classes
+                let classes = "nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-transparent";
+                
+                // Construct Active Class with specific color (e.g. bg-blue-500)
+                // We store it in a data attribute to apply later in switchTab
+                const activeClass = `bg-${phase.color}-500 text-white shadow-lg shadow-${phase.color}-500/30 transform -translate-y-0.5`;
+
+                // Store metadata for switching
+                btn.dataset.activeClass = activeClass;
+                // Store base hover class for inactive state
+                const hoverClass = hoverMap[phase.color] || "hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300";
+                btn.dataset.inactiveClass = `text-slate-600 dark:text-slate-300 ${hoverClass}`;
+
+                btn.className = classes; // Base classes
+
+                // Add bubble icon using the color map
+                const iconColorClass = colorMap[phase.color] || "bg-gray-100 text-gray-600";
+                // We wrap icon in a span to easily toggle its color if needed, but bubble approach is fine.
+                // However, on Active state (full color background), the colored bubble might look odd or good depending on taste.
+                // Let's keep the bubble for consistency as requested "Like the image" (usually implies colored icons).
+                btn.innerHTML = `<div class="p-1.5 rounded-full ${iconColorClass} flex items-center justify-center shadow-sm"><i data-lucide="${phase.icon}" class="w-4 h-4"></i></div> ${phase.name}`;
+                
+                // Initial State Application
+                if (index === 0) {
+                     // Apply active class manually
+                     btn.className = `${classes} ${activeClass}`;
+                     btn.classList.add('active');
+                } else {
+                     // Apply inactive class
+                     btn.className = `${classes} ${btn.dataset.inactiveClass}`;
+                }
+                
+                btn.onclick = () => {
+                    currentPhaseIndex = index; // Update index on click
+                    switchTab(phase.id, btn);
+                };
+                
+                container.appendChild(btn);
+            });
+            lucide.createIcons(); // Refresh icons for navbar
+        }
+
+        function switchTab(phaseId, btnElement) {
+            // Clear Search if active
+            const searchInput = document.getElementById('search-input');
+            if(searchInput.value) {
+                searchInput.value = '';
+                document.getElementById('navbar-container').parentElement.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            // Update Buttons
+            const btns = document.querySelectorAll('.nav-btn');
+            
+            // Re-apply inactive state to all
+            btns.forEach((btn, idx) => {
+                // Determine base classes again or just strip current classes? 
+                // Easiest is to reset to base + inactive
+                const baseClasses = "nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-transparent";
+                
+                // Reset to inactive
+                btn.className = `${baseClasses} ${btn.dataset.inactiveClass}`;
+                
+                // Auto-detect button if not passed (e.g. from keyboard)
+                if (!btnElement && idx === currentPhaseIndex) {
+                    btnElement = btn;
+                }
+            });
+            
+            if(btnElement) {
+                // Apply active state
+                const baseClasses = "nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 border border-transparent";
+                btnElement.className = `${baseClasses} ${btnElement.dataset.activeClass}`;
+                
+                btnElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+
+            // Update Content
+            document.querySelectorAll('.phase-card').forEach(card => {
+                card.classList.add('hidden');
+            });
+            const activeCard = document.getElementById(`phase-${phaseId}`);
+            if(activeCard) {
+                activeCard.classList.remove('hidden');
+                activeCard.classList.remove('animate-slide-up');
+                void activeCard.offsetWidth; // trigger reflow
+                activeCard.classList.add('animate-slide-up');
+            }
+        }
+
+        // --- Keyboard Navigation ---
+        document.addEventListener('keydown', (e) => {
+            // Disable if search focused or modal open
+            if(document.activeElement.id === 'search-input' || !document.getElementById('quiz-modal').classList.contains('hidden')) return;
+
+            if (e.key === 'ArrowRight') {
+                if (currentPhaseIndex < phases.length - 1) {
+                    currentPhaseIndex++;
+                    switchTab(phases[currentPhaseIndex].id);
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (currentPhaseIndex > 0) {
+                    currentPhaseIndex--;
+                    switchTab(phases[currentPhaseIndex].id);
+                }
+            }
+        });
+
+        // Initialize
+        initNavbar();
+        initMastery();
+
+        // --- Quiz System ---
+        
+        // Timer Logic
+        let timerInterval;
+        let timeLeft = 15;
+        const CHOICE_TIME = 15;
+        const TYPING_TIME = 60; // 1 Minute
+
+        function startTimer(limit, callback) {
+            timeLeft = limit;
+            updateTimerDisplay(limit);
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay(limit);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    callback(); // Trigger timeout action
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function updateTimerDisplay(limit) {
+            const display = currentMode === 'choice' ? document.getElementById('q-timer') : document.getElementById('t-timer');
+            const bar = document.getElementById('timer-bar');
+            
+            if (display) display.innerHTML = `<i data-lucide="timer" class="w-3 h-3"></i> ${timeLeft}s`;
+            if (bar) {
+                const percent = (timeLeft / limit) * 100;
+                bar.style.width = `${percent}%`;
+                
+                // Color change
+                if (percent < 30) {
+                    bar.className = 'h-full bg-red-500 w-full timer-bar transition-all duration-1000 ease-linear';
+                } else if (percent < 60) {
+                    bar.className = 'h-full bg-orange-500 w-full timer-bar transition-all duration-1000 ease-linear';
+                } else {
+                    bar.className = 'h-full bg-rose-500 w-full timer-bar transition-all duration-1000 ease-linear';
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // Expanded Choice Questions (Covering Phase 1-9)
+        const choiceQuestions = [
+            { q: "คำสั่งติดตั้ง SSH Server คือ?", options: ["apt install ssh", "sudo apt install openssh-server", "npm install ssh", "docker run ssh"], a: 1 },
+            { q: "Port มาตรฐานของ Portainer ที่เราใช้คือ?", options: ["8080", "9443", "3000"], a: 1 },
+            { q: "GitLab Web UI ในตัวอย่างนี้รันที่ Port ไหน?", options: ["80", "443", "8888"], a: 2 },
+            { q: "คำสั่งรีเซ็ตรหัสผ่าน GitLab ต้องพิมพ์อะไรก่อนเข้า Console?", options: ["docker exec -it gitlab /bin/bash", "sudo gitlab reset", "ssh root@gitlab"], a: 0 },
+            { q: "ในไฟล์ config.toml ของ Runner ต้องแก้ privileged เป็นค่าใด?", options: ["false", "true", "admin"], a: 1 },
+            { q: "การแก้ไข Docker Live Connect ต้องแก้ไฟล์ใด?", options: ["/etc/docker/daemon.json", "docker-compose.yml", ".gitlab-ci.yml"], a: 0 },
+            { q: "คำสั่ง Git เพื่ออัปโหลดโค้ดไปยัง Server คือ?", options: ["git pull", "git fetch", "git push -u origin master"], a: 2 },
+            { q: "Image ที่ใช้สำหรับ Docker-in-Docker คือ?", options: ["docker:dind", "ubuntu:latest", "nginx:stable"], a: 0 },
+            { q: "คำสั่งสร้าง Volume สำหรับ Portainer คือ?", options: ["docker volume create portainer_data", "mkdir portainer", "vol create"], a: 0 },
+            { q: "คำสั่ง enable docker service คือ?", options: ["systemctl start docker", "sudo systemctl enable docker", "docker up"], a: 1 },
+            { q: "Database Port ของ MariaDB คือ?", options: ["3306", "5432", "8080"], a: 0 },
+            { q: "Image Base ที่ใช้สำหรับ Backend Node.js คือ?", options: ["node:20-alpine", "ubuntu", "python"], a: 0 },
+            { q: "คำสั่งเพิ่ม GPG Key?", options: ["curl ... | sudo gpg --dearmor", "apt-key add", "wget key"], a: 0 },
+            { q: "Runner Executor type?", options: ["shell", "docker", "kubernetes"], a: 1 },
+            { q: "คำสั่งตรวจสอบสถานะ Docker?", options: ["docker check", "sudo systemctl status docker", "docker ping"], a: 1 },
+            { q: "Port ของ Backend App ในตัวอย่าง?", options: ["3000", "3001", "8000"], a: 1 },
+            { q: "Service PHPMyAdmin เชื่อมต่อกับ Host ใด?", options: ["localhost", "mariadb", "127.0.0.1"], a: 1 },
+            { q: "Frontend Dockerfile ใช้ Image ใดใน Production Stage?", options: ["nginx:stable-alpine", "node:16", "apache"], a: 0 }
+        ];
+
+        // Expanded Typing Questions (Covering Phase 1-9)
+        const typingQuestions = [
+            { phase: "Phase 1: SSH", q: "คำสั่งติดตั้ง SSH Server บน Ubuntu", a: "sudo apt install openssh-server" },
+            { phase: "Phase 1: Connect", q: "คำสั่งเชื่อมต่อ SSH ไปยัง Server (User=user, IP=ip)", a: "ssh user@ip" }, 
+            { phase: "Phase 2: Docker", q: "คำสั่งเปิดให้ Docker ทำงานอัตโนมัติเมื่อเปิดเครื่อง", a: "sudo systemctl enable docker" },
+            { phase: "Phase 2: Clean", q: "คำสั่งลบ Docker เก่า (เฉพาะส่วนแรก for pkg in ...)", a: "for pkg in docker.io" },
+            { phase: "Phase 3: Portainer", q: "คำสั่งสร้าง Volume ชื่อ portainer_data", a: "docker volume create portainer_data" },
+            { phase: "Phase 3: Config", q: "Key ที่ต้องเพิ่มใน daemon.json เพื่อแก้ Live Connect", a: "min-api-version" },
+            { phase: "Phase 4: GitLab", q: "คำสั่งเข้า Shell ของ Container ชื่อ gitlab", a: "docker exec -it gitlab /bin/bash" },
+            { phase: "Phase 4: Reset Pass", q: "คำสั่ง Confirm Password ใน Console", a: "user.password_confirmation = 'pntc@2025'" },
+            { phase: "Phase 5: Runner", q: "คำสั่งลงทะเบียน Runner (ผ่าน Container)", a: "sudo docker exec -it gitlab-runner gitlab-runner register" },
+            { phase: "Phase 5: Config", q: "Key ที่ต้องเพิ่มใน Host daemon.json (Runner)", a: "insecure-registries" },
+            { phase: "Phase 6: CI/CD", q: "ใน .gitlab-ci.yml คำสั่ง build docker image (ย่อ)", a: "docker build -t $IMAGE_TAG ." },
+            { phase: "Phase 7: Frontend", q: "Dockerfile Frontend Stage 1 Base Image", a: "FROM node:16-alpine as build-stage" },
+            { phase: "Phase 7: Backend", q: "Dockerfile Backend Base Image", a: "FROM node:20-alpine" },
+            { phase: "Phase 8: Git", q: "คำสั่งเริ่มต้นระบบ Git ในโฟลเดอร์", a: "git init" },
+            { phase: "Phase 8: Git", q: "คำสั่ง Push Code ไปยัง Master", a: "git push -u origin master" },
+            { phase: "Phase 9: Deploy", q: "ชื่อ Image ของ MariaDB", a: "mariadb:latest" },
+            { phase: "Phase 9: Deploy", q: "Environment Variable สำหรับรหัสผ่าน Root MySQL", a: "MYSQL_ROOT_PASSWORD" },
+            { phase: "Rules", q: "Package จัดการ Frontend UI (Vue/Nuxt)", a: "vuetifyjs" },
+            { phase: "Rules", q: "Monitoring Tool Image", a: "grafana/grafana" },
+            { phase: "Rules", q: "IoT Protocol", a: "MQTT" }
+        ];
+
+        let currentMode = '';
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+
+        // Load High Scores
+        function loadHighScores() {
+            const choiceScore = localStorage.getItem('devops_best_choice') || '-';
+            const typingScore = localStorage.getItem('devops_best_typing') || '-';
+            
+            document.getElementById('best-choice-score').innerText = `Best Choice: ${choiceScore}`;
+            document.getElementById('best-typing-score').innerText = `Best Typing: ${typingScore}`;
+        }
+
+        function openQuiz() {
+            loadHighScores(); // Load scores when opening
+            const modal = document.getElementById('quiz-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                document.getElementById('quiz-content').classList.remove('scale-95');
+                document.getElementById('quiz-content').classList.add('scale-100');
+            }, 10);
+            
+            // Show Mode Select
+            document.getElementById('quiz-mode-select').classList.remove('hidden');
+            document.getElementById('quiz-question-container').classList.add('hidden');
+            document.getElementById('quiz-typing-container').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('timer-container').classList.add('hidden');
+            document.getElementById('new-high-score').classList.add('hidden'); // Hide badge
+        }
+
+        function closeQuiz() {
+            const modal = document.getElementById('quiz-modal');
+            stopTimer();
+            modal.classList.add('opacity-0');
+            document.getElementById('quiz-content').classList.remove('scale-100');
+            document.getElementById('quiz-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function resetQuiz() {
+             stopTimer();
+             document.getElementById('quiz-result').classList.add('hidden');
+             document.getElementById('quiz-mode-select').classList.remove('hidden');
+             loadHighScores();
+        }
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            score = 0;
+            currentIndex = 0;
+            
+            document.getElementById('quiz-mode-select').classList.add('hidden');
+            document.getElementById('timer-container').classList.remove('hidden');
+            
+            if (mode === 'choice') {
+                currentQuestions = [...choiceQuestions].sort(() => 0.5 - Math.random()).slice(0, 10); // Pick 10 random
+                document.getElementById('quiz-question-container').classList.remove('hidden');
+                showChoiceQuestion();
+            } else {
+                currentQuestions = typingQuestions; // Use all ordered questions
+                document.getElementById('quiz-typing-container').classList.remove('hidden');
+                showTypingQuestion();
+            }
+        }
+
+        // --- Choice Mode Logic ---
+        function showChoiceQuestion() {
+            const q = currentQuestions[currentIndex];
+            document.getElementById('q-progress').innerText = `Question ${currentIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('q-score').innerText = `Score: ${score}`;
+            document.getElementById('q-text').innerText = q.q;
+            
+            const optsDiv = document.getElementById('q-options');
+            optsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-200 transition text-sm mb-2";
+                btn.innerText = opt;
+                btn.onclick = () => checkChoiceAnswer(idx, q.a);
+                optsDiv.appendChild(btn);
+            });
+
+            // Start Timer (15s)
+            startTimer(CHOICE_TIME, () => checkChoiceAnswer(-1, q.a)); 
+        }
+
+        function checkChoiceAnswer(selected, correct) {
+            stopTimer();
+            const optsDiv = document.getElementById('q-options');
+            const btns = optsDiv.getElementsByTagName('button');
+            
+            if (selected === correct) {
+                if(selected !== -1) btns[selected].classList.add('bg-green-100', 'border-green-500', 'text-green-700', 'dark:bg-green-900', 'dark:border-green-500');
+                score++;
+            } else {
+                if(selected !== -1) btns[selected].classList.add('bg-red-100', 'border-red-500', 'text-red-700', 'dark:bg-red-900', 'dark:border-red-500');
+                if (correct !== -1 && btns[correct]) btns[correct].classList.add('bg-green-100', 'border-green-500', 'text-green-700', 'dark:bg-green-900', 'dark:border-green-500');
+            }
+            
+            for(let btn of btns) btn.disabled = true;
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < currentQuestions.length) {
+                    showChoiceQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1000);
+        }
+
+        // --- Typing Mode Logic ---
+        function showTypingQuestion() {
+            const q = currentQuestions[currentIndex];
+            document.getElementById('t-progress').innerText = `Step ${currentIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('t-phase-label').innerText = q.phase;
+            document.getElementById('t-text').innerText = q.q;
+            
+            const input = document.getElementById('t-input');
+            input.value = '';
+            input.disabled = false;
+            input.focus();
+            
+            document.getElementById('t-feedback').innerText = '';
+            document.getElementById('t-feedback').className = 'text-center text-sm font-bold min-h-[20px]';
+
+            // Allow Enter key
+            input.onkeypress = function(e) {
+                if(e.key === 'Enter') checkTypingAnswer();
+            }
+
+            // Start Timer (60s)
+            startTimer(TYPING_TIME, () => checkTypingAnswer(true)); 
+        }
+
+        function checkTypingAnswer(isTimeout = false) {
+            stopTimer();
+            const input = document.getElementById('t-input');
+            const feedback = document.getElementById('t-feedback');
+            const userAns = input.value.trim();
+            const correctAns = currentQuestions[currentIndex].a;
+            
+            let isCorrect = false;
+            
+            if (!isTimeout) {
+                // Flexible check: Exact match OR contains key part if long
+                if (userAns === correctAns) {
+                    isCorrect = true;
+                } else if (correctAns.length > 15 && userAns.includes(correctAns.substring(0, 10))) {
+                    // For very long commands, check start/contains. 
+                    // Better logic: check if userAns contains the core command
+                    if(userAns.includes(correctAns)) isCorrect = true;
+                }
+                
+                // Specific Overrides for loose matching
+                if(currentIndex === 1 && userAns.startsWith('ssh') && userAns.includes('@')) isCorrect = true;
+                if(currentIndex === 3 && userAns.includes('for pkg in')) isCorrect = true;
+            }
+
+            input.disabled = true;
+
+            if (isCorrect) {
+                feedback.innerText = "Correct! ✅";
+                feedback.classList.add('text-green-500');
+                score++;
+            } else {
+                feedback.innerText = isTimeout ? `Time's up! Answer: ${correctAns}` : `Incorrect! Answer: ${correctAns}`;
+                feedback.classList.add('text-red-500');
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < currentQuestions.length) {
+                    showTypingQuestion();
+                } else {
+                    showResult();
+                }
+            }, 2000);
+        }
+
+        // --- Result Logic ---
+        function showResult() {
+            document.getElementById('timer-container').classList.add('hidden');
+            document.getElementById('quiz-question-container').classList.add('hidden');
+            document.getElementById('quiz-typing-container').classList.add('hidden');
+            
+            const resDiv = document.getElementById('quiz-result');
+            resDiv.classList.remove('hidden');
+            
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-msg');
+            const icon = document.getElementById('result-icon');
+            const resScore = document.getElementById('res-score');
+            const resPercent = document.getElementById('res-percent');
+            
+            const total = currentQuestions.length;
+            const percentage = Math.round((score / total) * 100);
+
+            resScore.innerText = `${score}/${total}`;
+            resPercent.innerText = `${percentage}%`;
+
+            if (percentage === 100) {
+                title.innerText = "เทพเจ้า DevOps! 🏆";
+                title.className = "text-2xl font-bold text-green-500";
+                msg.innerText = `ทำได้เต็ม! คุณคือผู้เชี่ยวชาญตัวจริง`;
+                icon.innerHTML = '<i data-lucide="crown" class="w-10 h-10 text-green-500"></i>';
+                icon.className = "w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto";
+                triggerConfetti();
+            } else if (percentage >= 60) {
+                title.innerText = "ผ่านเกณฑ์! 👍";
+                title.className = "text-2xl font-bold text-blue-500";
+                msg.innerText = `เก่งใช้ได้เลย ฝึกฝนอีกนิดจะแม่นยำขึ้น`;
+                icon.innerHTML = '<i data-lucide="thumbs-up" class="w-10 h-10 text-blue-500"></i>';
+                icon.className = "w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto";
+            } else {
+                title.innerText = "พยายามอีกนิด 💪";
+                title.className = "text-2xl font-bold text-orange-500";
+                msg.innerText = `อย่าเพิ่งท้อนะ ลองอ่านทบทวนแล้วมาสอบใหม่`;
+                icon.innerHTML = '<i data-lucide="book-open" class="w-10 h-10 text-orange-500"></i>';
+                icon.className = "w-20 h-20 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto";
+            }
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
