@@ -360,32 +360,13 @@
                 </div>
                 <div class="p-6 sm:p-8 space-y-8">
                     <div>
-                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
-                             <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 shadow-sm inline-block mr-2"><i data-lucide="trash-2" class="w-4 h-4"></i></div>
-                             1. Clean & Prepare
+                        <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 shadow-sm inline-block mr-2"><i data-lucide="play-circle" class="w-4 h-4"></i></div>
+                            Install docker
                         </h3>
                         <div class="code-block group">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<span class="text-slate-500 italic"># Remove old versions</span>
-<span class="cmd-line">for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done</span>
-
-<span class="text-slate-500 italic"># Add Repo & Install Keys</span>
-<span class="cmd-line">sudo apt-get update</span>
-<span class="cmd-line">sudo apt-get install ca-certificates curl gnupg lsb-release</span>
-<span class="cmd-line">sudo install -m 0755 -d /etc/apt/keyrings</span>
-<span class="cmd-line">sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg</span>
-<span class="cmd-line">sudo chmod a+r /etc/apt/keyrings/docker.gpg</span>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">
-                            <div class="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 shadow-sm inline-block mr-2"><i data-lucide="play-circle" class="w-4 h-4"></i></div>
-                            2. Install Engine & Enable
-                        </h3>
-                        <div class="code-block group">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <span class="cmd-line">sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y</span>
-                            <span class="cmd-line">sudo systemctl enable docker</span>
+                            <span class="cmd-line">sudo apt install curl -y</span>
+                            <span class="cmd-line">sudo curl -fsSL https://get.docker.com | sudo sh</span>
                         </div>
                     </div>
                 </div>
