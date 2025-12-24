@@ -630,7 +630,7 @@ volumes:
                         </h3>
                         <div class="space-y-6">
                             <div>
-                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">runner/config.toml</code></p>
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">sudo nano /var/lib/docker/volumes/gitlab_runner_config/_data/config.toml</code></p>
                                 <div class="code-block group text-sm">
                                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
 privileged = true
@@ -639,7 +639,7 @@ volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
                                 </div>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ Host <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">/etc/docker/daemon.json</code></p>
+                                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">แก้ไขไฟล์ Host <code class="bg-slate-200 dark:bg-slate-700 px-1 rounded">sudo nano /etc/docker/daemon.json</code></p>
                                 <div class="code-block group text-sm">
                                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
 { "insecure-registries" : ["172.16.39.193:5000"] }
